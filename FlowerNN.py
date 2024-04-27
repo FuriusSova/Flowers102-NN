@@ -21,102 +21,70 @@ train_set = shuffle(datasets.Flowers102(root='./train', split='train', download=
 val_set = shuffle(datasets.Flowers102(root='./valid', split='val', download=True, transform=transform))
 test_set = datasets.Flowers102(root='./test', split='test', download=True, transform=transform)
 
-# train_loader = torch.utils.data.DataLoader(train_set, batch_size=4, shuffle=True)
-# val_loader = torch.utils.data.DataLoader(val_set, batch_size=4, shuffle=True)
-# test_loader = torch.utils.data.DataLoader(test_set, batch_size=4, shuffle=False)
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=4, shuffle=True)
+val_loader = torch.utils.data.DataLoader(val_set, batch_size=4, shuffle=True)
+test_loader = torch.utils.data.DataLoader(test_set, batch_size=4, shuffle=False)
 
-# dataiter = iter(train_loader)
-# images, labels = next(dataiter)
+conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)
+conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3)
+pool = nn.MaxPool2d(kernel_size=2, stride=2)
 
-def split_dataset(set_to_split):
-	x_set = []
-	y_set = []
-	for image, label in set_to_split:
-		# red_channel = image[0]
-		# green_channel = image[1]
-		# blue_channel = image[2]
-		# red_channel = image[0].flatten().numpy()
-		# green_channel = image[1].flatten().numpy()
-		# blue_channel = image[2].flatten().numpy()
-		x_set.append(image)
-		y_set.append(label)
-	
-	return (x_set, y_set)
 
-x_train, y_train = split_dataset(train_set)
-x_validate, y_validate = split_dataset(val_set)
-x_test, y_test = split_dataset(test_set)
-
-x_train = torch.stack(x_train)
-x_validate = torch.stack(x_validate)
-x_test = torch.stack(x_test)
-
-y_train = torch.LongTensor(y_train)
-y_validate = torch.LongTensor(y_validate)
-y_test = torch.LongTensor(y_test)
-
-# df = pd.DataFrame(data, columns=['Red', 'Green', 'Blue', 'Label'])
-# features = df[['Red', 'Green', 'Blue']].values
-# labels = df['Label'].values
-
-# features_tensor = torch.tensor(features, dtype=torch.float32)
-# labels_tensor = torch.tensor(labels, dtype=torch.long)
-
-# dataset = TensorDataset(features_tensor, labels_tensor)
-# data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
+# Uncomment to figure out the in_features number for the first Linear layer
+# for i, (images, labels) in enumerate(train_loader):
+# 	x = conv1(images)
+# 	x = pool(x)
+# 	x = conv2(x)
+# 	x = pool(x)
+# 	print(x.shape)
+# 	break
 
 class FlowerNN(nn.Module):
-	def __init__(self, in_features, hidden_layers, out_features, activation_function = F.relu): 
+	def __init__(self, activation_fn = F.relu):
 		super().__init__()
-		if len(hidden_layers) < 1:
-			raise Exception("My_NN must have at least 1 hidden layer")
+		self.conv1 = conv1
+		self.pool = pool
+		self.conv2 = conv2
+		self.fc1 = nn.Linear(in_features=32 * 54 * 54, out_features=136)
+		self.fc2 = nn.Linear(136, 114)
+		self.fc3 = nn.Linear(114, 102)
 
-		self.layers = []  
-		self.layers.append(nn.Linear(in_features, hidden_layers[0])) 
-		self.add_module("input_layer", self.layers[0]) 
-
-		for i in range(1, len(hidden_layers)):
-			self.layers.append(nn.Linear(hidden_layers[i-1], hidden_layers[i]))
-			self.add_module(f"hidden_layer_{i}", self.layers[i])
-
-		self.out = nn.Linear(hidden_layers[-1], out_features)
-
-		self.activation_function = activation_function
+		self.activation_fn = activation_fn
 
 	def forward(self, x):
-		for i in range(len(self.layers)):
-			x = self.activation_function(self.layers[i](x))
-		x = self.out(x)
+		x = self.pool(self.activation_fn(self.conv1(x)))
+		x = self.pool(self.activation_fn(self.conv2(x)))
+		x = torch.flatten(x, 1)
+		x = self.activation_fn(self.fc1(x))
+		x = self.activation_fn(self.fc2(x))
+		x = self.fc3(x)
 		return x
 	
-classifier = FlowerNN(in_features=224, hidden_layers=[128, 64], out_features=102, activation_function = F.relu)
+classifier = FlowerNN()
 lossFn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001)
-epochs = 500
+optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9)
+epochs = 10
 
 losses = []
 for i in range(epochs):
-	y_pred = classifier.forward(x_train)
-	y_pred = y_pred.view(1020, -1)
-	loss = lossFn(y_pred, y_train)
-	losses.append(loss.detach().numpy())
+	for images, labels in train_loader:
+		optimizer.zero_grad()
+		y_pred = classifier.forward(images)
+		loss = lossFn(y_pred, labels)
+		losses.append(loss.detach().numpy())
+		loss.backward() 
+		optimizer.step()
+		
+	print(f"Epoch {i} - {loss}")
 
-	if i % 10 == 0:
-		print(f"Epoch {i} - {loss}") # Print the loss every 10 epoch
+# # Evaluate
+# with torch.no_grad(): # Tell pytorch not to calculate the gradient
+# 	y_eval = classifier.forward(x_validate)
+# 	loss = lossFn(y_eval, y_validate)
 
-	# Do corrections to thetas
-	optimizer.zero_grad() # Clean the stored grads computed in the last iteration
-	loss.backward() # Calculates the amounts given the differentials. How to correct each of the neurons given the loss that we have
-	optimizer.step()
-
-# Evaluate
-with torch.no_grad(): # Tell pytorch not to calculate the gradient
-	y_eval = classifier.forward(x_validate)
-	loss = lossFn(y_eval, y_validate)
-
-# # Visualize the loss for each epoch and the final loss of the trained model
-import matplotlib.pyplot as plt
-plt.plot(range(epochs), losses) # The loss for each epoch
-plt.plot([epochs], [loss], "g+") # The final loss
-plt.ylabel("Loss")
-plt.xlabel("Epoch")
+# # # Visualize the loss for each epoch and the final loss of the trained model
+# import matplotlib.pyplot as plt
+# plt.plot(range(epochs), losses) # The loss for each epoch
+# plt.plot([epochs], [loss], "g+") # The final loss
+# plt.ylabel("Loss")
+# plt.xlabel("Epoch")
