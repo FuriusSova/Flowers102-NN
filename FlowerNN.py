@@ -21,19 +21,16 @@ train_set = datasets.Flowers102(root='./train', split='train', download=True, tr
 # val_set = datasets.Flowers102(root='./valid', split='val', download=True, transform=transform)
 test_set = datasets.Flowers102(root='./test', split='test', download=True, transform=transform)
 
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=128, shuffle=True)
 # val_loader = torch.utils.data.DataLoader(val_set, batch_size=4, shuffle=True)
-test_loader = torch.utils.data.DataLoader(test_set, batch_size=64, shuffle=False)
+test_loader = torch.utils.data.DataLoader(test_set, batch_size=128, shuffle=False)
 
 conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3)
 conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
 conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
 conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
-conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
-conv6 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3)
 pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-pool3 = nn.MaxPool2d(kernel_size=4, stride=4)
+pool2 = nn.MaxPool2d(kernel_size=4, stride=4)
 
 # Uncomment to figure out the in_features number for the first Linear layer
 # for i, (images, labels) in enumerate(train_loader):
@@ -43,9 +40,6 @@ pool3 = nn.MaxPool2d(kernel_size=4, stride=4)
 # 	x = conv3(x)
 # 	x = conv4(x)
 # 	x = pool2(x)
-# 	x = conv5(x)
-# 	x = conv6(x)
-# 	x = pool3(x)
 # 	print(x.shape)
 # 	break
 
@@ -56,12 +50,9 @@ class FlowerNN(nn.Module):
 		self.conv2 = conv2
 		self.conv3 = conv3
 		self.conv4 = conv4
-		self.conv5 = conv5
-		self.conv6 = conv6
 		self.pool1 = pool1
 		self.pool2 = pool2
-		self.pool3 = pool3
-		self.fc1 = nn.Linear(in_features=128 * 6 * 6, out_features=256)
+		self.fc1 = nn.Linear(in_features=64 * 14 * 14, out_features=256)
 		self.fc2 = nn.Linear(256, 128)
 		self.fc3 = nn.Linear(128, 102)
 
@@ -72,8 +63,6 @@ class FlowerNN(nn.Module):
 		x = self.pool1(self.activation_fn(self.conv2(x)))
 		x = self.activation_fn(self.conv3(x))
 		x = self.pool2(self.activation_fn(self.conv4(x)))
-		x = self.activation_fn(self.conv5(x))
-		x = self.pool3(self.activation_fn(self.conv6(x)))
 		x = torch.flatten(x, 1)
 		x = self.activation_fn(self.fc1(x))
 		x = self.activation_fn(self.fc2(x))
