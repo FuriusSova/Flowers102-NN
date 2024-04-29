@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 
 transform = transforms.Compose([
     transforms.Resize((128, 128)),
+	transforms.RandomHorizontalFlip(),
+	transforms.RandomRotation(30),
     transforms.ToTensor(), 
     transforms.Normalize(
         mean=[0.4330, 0.3819, 0.2964],
@@ -18,17 +20,20 @@ transform = transforms.Compose([
 ])
 
 train_set = datasets.Flowers102(root='./train', split='train', download=True, transform=transform)
-# val_set = datasets.Flowers102(root='./valid', split='val', download=True, transform=transform)
+val_set = datasets.Flowers102(root='./valid', split='val', download=True, transform=transform)
 test_set = datasets.Flowers102(root='./test', split='test', download=True, transform=transform)
 
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=128, shuffle=True)
-# val_loader = torch.utils.data.DataLoader(val_set, batch_size=4, shuffle=True)
-test_loader = torch.utils.data.DataLoader(test_set, batch_size=128, shuffle=False)
+train_batch_size = round(len(train_set) / 8)
+validation_batch_size = round(len(val_set) / 8)
 
-conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3)
-conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
-conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
-conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
+train_loader = DataLoader(train_set, batch_size=train_batch_size, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=validation_batch_size, shuffle=True)
+test_loader = DataLoader(test_set, batch_size=128, shuffle=False)
+
+conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)
+conv2 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3)
+conv3 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3)
+conv4 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
 pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 pool2 = nn.MaxPool2d(kernel_size=4, stride=4)
 
@@ -52,9 +57,9 @@ class FlowerNN(nn.Module):
 		self.conv4 = conv4
 		self.pool1 = pool1
 		self.pool2 = pool2
-		self.fc1 = nn.Linear(in_features=64 * 14 * 14, out_features=256)
-		self.fc2 = nn.Linear(256, 128)
-		self.fc3 = nn.Linear(128, 102)
+		self.fc1 = nn.Linear(in_features=32 * 14 * 14, out_features=128)
+		self.fc2 = nn.Linear(128, 64)
+		self.fc3 = nn.Linear(64, 102)
 
 		self.activation_fn = activation_fn
 
@@ -69,27 +74,50 @@ class FlowerNN(nn.Module):
 		x = self.fc3(x)
 		return x
 	
+@torch.no_grad()
+def validate():
+	classifier.eval()
+	total_samples = 0
+	total_correct = 0
+	total_loss = 0
+	for images, labels in val_loader:
+		y_pred = classifier.forward(images)
+		_, predicted = torch.max(y_pred, 1)
+		val_loss = lossFn(y_pred, labels)
+		# val_losses.append(val_loss.detach().numpy())
+		total_loss += val_loss.item() * images.size(0)
+		total_samples += labels.size(0)
+		total_correct += (predicted == labels).sum().item()
+
+	return {"val_loss": total_loss / total_samples, "val_acc": total_correct / total_samples}
+
+	
 classifier = FlowerNN()
 lossFn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001)
 epochs = 20
 
-losses = []
+# train_losses = []
+# val_losses = []
+last_val_loss = 20
 for i in range(epochs):
+	classifier.train()
 	for images, labels in train_loader:
 		optimizer.zero_grad()
 		y_pred = classifier.forward(images)
 		loss = lossFn(y_pred, labels)
-		losses.append(loss.detach().numpy())
+		# train_losses.append(loss.detach().numpy())
 		loss.backward() 
 		optimizer.step()
 		
-	print(f"Epoch {i} - {loss}")
+	val_results = validate()
+	val_loss = val_results["val_loss"]
+	val_acc = val_results["val_acc"]
+	if last_val_loss < val_loss + 0.3: 
+		print("Validation loss is increasing")
+		break
+	print(f"Epoch {i} - train loss: {loss}, val loss: {val_loss}, val_acc: {val_acc}")
 
-# # Evaluate
-# with torch.no_grad(): # Tell pytorch not to calculate the gradient
-# 	y_eval = classifier.forward(x_validate)
-# 	loss = lossFn(y_eval, y_validate)
 
 # # # Visualize the loss for each epoch and the final loss of the trained model
 # import matplotlib.pyplot as plt
