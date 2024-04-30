@@ -48,6 +48,8 @@ pool2 = nn.MaxPool2d(kernel_size=4, stride=4)
 # 	print(x.shape)
 # 	break
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 class FlowerNN(nn.Module):
 	def __init__(self, activation_fn = F.relu):
 		super().__init__()
@@ -81,6 +83,8 @@ def validate():
 	total_correct = 0
 	total_loss = 0
 	for images, labels in val_loader:
+		images = images.to(device)
+		labels = labels.to(device)
 		y_pred = classifier.forward(images)
 		_, predicted = torch.max(y_pred, 1)
 		val_loss = lossFn(y_pred, labels)
@@ -92,17 +96,20 @@ def validate():
 	return {"val_loss": total_loss / total_samples, "val_acc": total_correct / total_samples}
 
 	
-classifier = FlowerNN()
+classifier = FlowerNN().to(device)
 lossFn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001, weight_decay=0.01)
 epochs = 20
 
 # train_losses = []
 # val_losses = []
 last_val_loss = 20
+counter_neg_loss = 0
 for i in range(epochs):
 	classifier.train()
 	for images, labels in train_loader:
+		images = images.to(device)
+		labels = labels.to(device)
 		optimizer.zero_grad()
 		y_pred = classifier.forward(images)
 		loss = lossFn(y_pred, labels)
@@ -113,16 +120,14 @@ for i in range(epochs):
 	val_results = validate()
 	val_loss = val_results["val_loss"]
 	val_acc = val_results["val_acc"]
-	if last_val_loss < val_loss + 0.3: 
+	print(f"Epoch {i} - train loss: {loss}, val loss: {val_loss}, val_acc: {val_acc}")
+	
+	if last_val_loss < val_loss: 
+		counter_neg_loss += 1
+	else:
+		counter_neg_loss = 0
+	
+	if counter_neg_loss == 5:
 		print("Validation loss is increasing")
 		break
 	last_val_loss = val_loss
-	print(f"Epoch {i} - train loss: {loss}, val loss: {val_loss}, val_acc: {val_acc}")
-
-
-# # # Visualize the loss for each epoch and the final loss of the trained model
-# import matplotlib.pyplot as plt
-# plt.plot(range(epochs), losses) # The loss for each epoch
-# plt.plot([epochs], [loss], "g+") # The final loss
-# plt.ylabel("Loss")
-# plt.xlabel("Epoch")
