@@ -23,14 +23,14 @@ train_set = datasets.Flowers102(root='./train', split='train', download=True, tr
 val_set = datasets.Flowers102(root='./valid', split='val', download=True, transform=transform)
 test_set = datasets.Flowers102(root='./test', split='test', download=True, transform=transform)
 
-batch_size = round(len(train_set) / 8)
+batch_size = round(len(train_set) / 4)
 
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
-conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3)
-conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
+conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)
+conv2 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3)
 # conv3 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3)
 # conv4 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
 pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -59,7 +59,8 @@ class FlowerNN(nn.Module):
 		# self.conv4 = conv4
 		self.pool1 = pool1
 		self.pool2 = pool2
-		self.fc1 = nn.Linear(in_features=32 * 15 * 15, out_features=128)
+		self.dropout = nn.Dropout(p=0.2)
+		self.fc1 = nn.Linear(in_features=16 * 15 * 15, out_features=128)
 		self.fc2 = nn.Linear(128, 64)
 		self.fc3 = nn.Linear(64, 102)
 
@@ -73,6 +74,7 @@ class FlowerNN(nn.Module):
 		x = torch.flatten(x, 1)
 		x = self.activation_fn(self.fc1(x))
 		x = self.activation_fn(self.fc2(x))
+		x = self.dropout(x)
 		x = self.fc3(x)
 		return x
 	
@@ -99,7 +101,7 @@ def validate():
 classifier = FlowerNN().to(device)
 lossFn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001, weight_decay=0.01)
-epochs = 20
+epochs = 30
 
 # train_losses = []
 # val_losses = []
