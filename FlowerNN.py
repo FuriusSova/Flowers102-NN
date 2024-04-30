@@ -23,12 +23,11 @@ train_set = datasets.Flowers102(root='./train', split='train', download=True, tr
 val_set = datasets.Flowers102(root='./valid', split='val', download=True, transform=transform)
 test_set = datasets.Flowers102(root='./test', split='test', download=True, transform=transform)
 
-train_batch_size = round(len(train_set) / 8)
-validation_batch_size = round(len(val_set) / 8)
+batch_size = round(len(train_set) / 8)
 
-train_loader = DataLoader(train_set, batch_size=train_batch_size, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=validation_batch_size, shuffle=True)
-test_loader = DataLoader(test_set, batch_size=128, shuffle=False)
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
 conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)
 conv2 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3)
