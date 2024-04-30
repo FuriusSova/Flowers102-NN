@@ -116,6 +116,7 @@ for i in range(epochs):
 	if last_val_loss < val_loss + 0.3: 
 		print("Validation loss is increasing")
 		break
+	last_val_loss = val_loss
 	print(f"Epoch {i} - train loss: {loss}, val loss: {val_loss}, val_acc: {val_acc}")
 
 
