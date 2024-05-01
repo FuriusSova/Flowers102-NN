@@ -9,7 +9,7 @@ from torchvision import datasets, transforms, models
 import matplotlib.pyplot as plt
 
 transform = transforms.Compose([
-    transforms.Resize((128, 128)),
+    transforms.Resize((224, 224)),
 	transforms.RandomHorizontalFlip(),
 	transforms.RandomRotation(15),
     transforms.ToTensor(), 
@@ -59,10 +59,10 @@ class FlowerNN(nn.Module):
 		# self.conv4 = conv4
 		self.pool1 = pool1
 		self.pool2 = pool2
-		self.dropout = nn.Dropout(p=0.2)
-		self.fc1 = nn.Linear(in_features=16 * 15 * 15, out_features=128)
-		self.fc2 = nn.Linear(128, 64)
-		self.fc3 = nn.Linear(64, 102)
+		self.dropout = nn.Dropout(p=0.3)
+		self.fc1 = nn.Linear(in_features=16 * 27 * 27, out_features=128)
+		# self.fc2 = nn.Linear(128, 64)
+		self.fc3 = nn.Linear(128, 102)
 
 		self.activation_fn = activation_fn
 
@@ -73,7 +73,7 @@ class FlowerNN(nn.Module):
 		# x = self.pool2(self.activation_fn(self.conv4(x)))
 		x = torch.flatten(x, 1)
 		x = self.activation_fn(self.fc1(x))
-		x = self.activation_fn(self.fc2(x))
+		# x = self.activation_fn(self.fc2(x))
 		x = self.dropout(x)
 		x = self.fc3(x)
 		return x
@@ -101,7 +101,7 @@ def validate():
 classifier = FlowerNN().to(device)
 lossFn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001, weight_decay=0.01)
-epochs = 30
+epochs = 20
 
 # train_losses = []
 # val_losses = []
