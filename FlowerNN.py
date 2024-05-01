@@ -127,7 +127,7 @@ for i in range(epochs):
 	if last_val_loss < val_loss: 
 		counter_neg_loss += 1
 	else:
-		counter_neg_loss = 0
+		counter_neg_loss -= 1
 	
 	if counter_neg_loss == 5:
 		print("Validation loss is increasing")
