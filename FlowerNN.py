@@ -23,10 +23,10 @@ train_set = datasets.Flowers102(root='./train', split='train', download=True, tr
 val_set = datasets.Flowers102(root='./valid', split='val', download=True, transform=transform)
 test_set = datasets.Flowers102(root='./test', split='test', download=True, transform=transform)
 
-batch_size = round(len(train_set) / 4)
+batch_size = round(len(train_set) / 12)
 
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
 conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)
@@ -101,7 +101,7 @@ def validate():
 classifier = FlowerNN().to(device)
 lossFn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001, weight_decay=0.01)
-epochs = 20
+epochs = 40
 
 # train_losses = []
 # val_losses = []
