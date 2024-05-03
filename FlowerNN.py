@@ -6,14 +6,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 from torchvision import datasets, transforms, models
+from torchvision.transforms import v2
 import matplotlib.pyplot as plt
 
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-	transforms.RandomHorizontalFlip(),
-	transforms.RandomRotation(15),
-    transforms.ToTensor(), 
-    transforms.Normalize(
+transform = v2.Compose([
+    v2.ToImage(),
+    v2.Resize((224, 224)),
+	v2.ToDtype(torch.float32, scale=True),
+	v2.RandomHorizontalFlip(),
+	v2.RandomRotation(15),
+    v2.Normalize(
         mean=[0.4330, 0.3819, 0.2964],
         std=[0.2587, 0.2093, 0.2210]
     ) 
