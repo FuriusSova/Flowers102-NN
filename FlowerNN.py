@@ -108,7 +108,6 @@ epochs = 40
 # train_losses = []
 # val_losses = []
 last_val_loss = 20
-counter_neg_loss = 0
 for i in range(epochs):
 	classifier.train()
 	for images, labels in train_loader:
@@ -126,12 +125,8 @@ for i in range(epochs):
 	val_acc = val_results["val_acc"]
 	print(f"Epoch {i} - train loss: {loss}, val loss: {val_loss}, val_acc: {val_acc}")
 	
-	if last_val_loss < val_loss: 
-		counter_neg_loss += 1
-	else:
-		counter_neg_loss -= 1
-	
-	if counter_neg_loss == 5:
+	if i % 5 == 0 and (last_val_loss < val_loss or abs(last_val_loss - val_loss) < 0.1): 
 		print("Validation loss is increasing")
 		break
-	last_val_loss = val_loss
+	elif i % 5 == 0 and last_val_loss > val_loss:
+		last_val_loss = val_loss
