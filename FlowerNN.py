@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 transform = v2.Compose([
     v2.ToImage(),
     v2.Resize((224, 224)),
+	v2.RandomHorizontalFlip(),
+	v2.RandomRotation(15),
 	v2.ToDtype(torch.float32, scale=True),
     v2.Normalize(
         mean=[0.4330, 0.3819, 0.2964],
@@ -30,9 +32,9 @@ val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
 conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)
-conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3)
-conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
-conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
+conv2 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3)
+# conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
+# conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
 pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 pool2 = nn.MaxPool2d(kernel_size=4, stride=4)
 
@@ -54,28 +56,27 @@ class FlowerNN(nn.Module):
 		super().__init__()
 		self.conv1 = conv1
 		self.conv2 = conv2
-		self.conv3 = conv3
-		self.conv4 = conv4
+		# self.conv3 = conv3
+		# self.conv4 = conv4
 		self.pool1 = pool1
 		self.pool2 = pool2
-		# self.dropout = nn.Dropout(p=0.3)
-		self.fc1 = nn.Linear(in_features=64 * 26 * 26, out_features=2048)
-		self.fc2 = nn.Linear(2048, 1024)
-		# self.fc3 = nn.Linear(520, 340)
-		self.fc4 = nn.Linear(1024, 102)
+		# self.dropout = nn.Dropout(p=0.1)
+		self.fc1 = nn.Linear(in_features=16 * 27 * 27, out_features=128)
+		# self.fc2 = nn.Linear(256, 128)
+		self.fc3 = nn.Linear(128, 102)
 
 		self.activation_fn = activation_fn
 
 	def forward(self, x):
-		x = self.activation_fn(self.conv1(x))
-		x = self.pool1(self.activation_fn(self.conv2(x)))
-		x = self.activation_fn(self.conv3(x))
-		x = self.pool2(self.activation_fn(self.conv4(x)))
+		x = self.pool1(self.activation_fn(self.conv1(x)))
+		x = self.pool2(self.activation_fn(self.conv2(x)))
+		# x = self.activation_fn(self.conv3(x))
+		# x = self.pool2(self.activation_fn(self.conv4(x)))
 		x = torch.flatten(x, 1)
 		x = self.activation_fn(self.fc1(x))
-		x = self.activation_fn(self.fc2(x))
-		# x = self.activation_fn(self.fc3(x))
-		x = self.fc4(x)
+		# x = self.dropout(x)
+		# x = self.activation_fn(self.fc2(x))
+		x = self.fc3(x)
 		return x
 	
 @torch.no_grad()
@@ -100,8 +101,8 @@ def validate():
 	
 classifier = FlowerNN().to(device)
 lossFn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
-epochs = 40
+optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9, weight_decay=0.01)
+epochs = 500
 
 # train_losses = []
 # val_losses = []
@@ -118,13 +119,16 @@ for i in range(epochs):
 		loss.backward() 
 		optimizer.step()
 		
-	val_results = validate()
-	val_loss = val_results["val_loss"]
-	val_acc = val_results["val_acc"]
-	print(f"Epoch {i} - train loss: {loss}, val loss: {val_loss}, val_acc: {val_acc}")
 	
-	if i % 5 == 0 and (last_val_loss < val_loss or abs(last_val_loss - val_loss) < 0.1): 
-		print("Validation loss is increasing")
-		break
-	elif i % 5 == 0 and last_val_loss > val_loss:
-		last_val_loss = val_loss
+
+	if i % 10 == 0:
+		val_results = validate()
+		val_loss = val_results["val_loss"]
+		val_acc = val_results["val_acc"]
+		print(f"Epoch {i} - train loss: {loss}, val loss: {val_loss}, val_acc: {val_acc}")
+	
+	# if i % 5 == 0 and (last_val_loss < val_loss or abs(last_val_loss - val_loss) < 0.1): 
+	# 	print("Validation loss is increasing")
+	# 	break
+	# elif i % 5 == 0 and last_val_loss > val_loss:
+	# 	last_val_loss = val_loss
