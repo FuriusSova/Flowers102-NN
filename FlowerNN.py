@@ -60,7 +60,9 @@ class FlowerNN(nn.Module):
 		# self.conv4 = conv4
 		self.pool1 = pool1
 		self.pool2 = pool2
-		# self.dropout = nn.Dropout(p=0.1)
+		self.dropout1 = nn.Dropout(p=0.1)
+		self.dropout2 = nn.Dropout(p=0.2)
+		self.dropout3 = nn.Dropout(p=0.3)
 		self.fc1 = nn.Linear(in_features=16 * 27 * 27, out_features=128)
 		# self.fc2 = nn.Linear(256, 128)
 		self.fc3 = nn.Linear(128, 102)
@@ -68,13 +70,13 @@ class FlowerNN(nn.Module):
 		self.activation_fn = activation_fn
 
 	def forward(self, x):
-		x = self.pool1(self.activation_fn(self.conv1(x)))
-		x = self.pool2(self.activation_fn(self.conv2(x)))
+		x = self.dropout1(self.pool1(self.activation_fn(self.conv1(x))))
+		x = self.dropout2(self.pool2(self.activation_fn(self.conv2(x))))
 		# x = self.activation_fn(self.conv3(x))
 		# x = self.pool2(self.activation_fn(self.conv4(x)))
 		x = torch.flatten(x, 1)
 		x = self.activation_fn(self.fc1(x))
-		# x = self.dropout(x)
+		x = self.dropout3(x)
 		# x = self.activation_fn(self.fc2(x))
 		x = self.fc3(x)
 		return x
