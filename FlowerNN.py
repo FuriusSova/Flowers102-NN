@@ -31,8 +31,8 @@ train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
-conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3)
-conv2 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3)
+conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3)
+conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
 # conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
 # conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
 pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -50,6 +50,7 @@ pool2 = nn.MaxPool2d(kernel_size=4, stride=4)
 # 	break
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"{device.type} device is in use")
 
 class FlowerNN(nn.Module):
 	def __init__(self, activation_fn = F.relu):
@@ -60,12 +61,13 @@ class FlowerNN(nn.Module):
 		# self.conv4 = conv4
 		self.pool1 = pool1
 		self.pool2 = pool2
-		self.dropout1 = nn.Dropout(p=0.1)
-		self.dropout2 = nn.Dropout(p=0.2)
-		self.dropout3 = nn.Dropout(p=0.3)
-		self.fc1 = nn.Linear(in_features=16 * 27 * 27, out_features=128)
+		self.dropout1 = nn.Dropout(p=0.2)
+		self.dropout2 = nn.Dropout(p=0.3)
+		self.dropout3 = nn.Dropout(p=0.4)
+		# self.bn = nn.BatchNorm2d(16)
+		self.fc1 = nn.Linear(in_features=32 * 27 * 27, out_features=256)
 		# self.fc2 = nn.Linear(256, 128)
-		self.fc3 = nn.Linear(128, 102)
+		self.fc3 = nn.Linear(256, 102)
 
 		self.activation_fn = activation_fn
 
