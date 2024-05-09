@@ -84,7 +84,7 @@ class FlowerNN(nn.Module):
 		x = self.activation_fn(self.conv2(x))
 		x = self.pool1(self.activation_fn(self.conv3(x)))
 		x = self.dropout1(self.activation_fn(self.conv4(x)))
-		x = self.dropout2(self.pool2(self.activation_fn(self.conv5)))
+		x = self.dropout2(self.pool2(self.activation_fn(self.conv5(x))))
 		x = torch.flatten(x, 1)
 		x = self.activation_fn(self.fc1(x))
 		x = self.activation_fn(self.fc2(x))
