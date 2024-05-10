@@ -70,7 +70,7 @@ class FlowerNN(nn.Module):
 		# self.bn = nn.BatchNorm2d(16)
 		self.fc1 = nn.Linear(in_features=64 * 27 * 27, out_features=512)
 		self.fc2 = nn.Linear(512, 256)
-		self.fc3 = nn.Linear(256, 128)
+		self.fc3 = nn.Linear(256, 102)
 
 		self.activation_fn = activation_fn
 
