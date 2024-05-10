@@ -24,7 +24,7 @@ train_set = datasets.Flowers102(root='/tmp/ds1855/train', split='train', downloa
 val_set = datasets.Flowers102(root='/tmp/ds1855/valid', split='val', download=True, transform=transform)
 test_set = datasets.Flowers102(root='/tmp/ds1855/test', split='test', download=True, transform=transform)
 
-batch_size = 32
+batch_size = 16
 
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
