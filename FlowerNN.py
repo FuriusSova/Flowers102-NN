@@ -20,11 +20,11 @@ transform = v2.Compose([
     ) 
 ])
 
-train_set = datasets.Flowers102(root='./train', split='train', download=True, transform=transform)
-val_set = datasets.Flowers102(root='./valid', split='val', download=True, transform=transform)
-test_set = datasets.Flowers102(root='./test', split='test', download=True, transform=transform)
+train_set = datasets.Flowers102(root='/tmp/ds1855/train', split='train', download=True, transform=transform)
+val_set = datasets.Flowers102(root='/tmp/ds1855/valid', split='val', download=True, transform=transform)
+test_set = datasets.Flowers102(root='/tmp/ds1855/test', split='test', download=True, transform=transform)
 
-batch_size = round(len(train_set) / 8)
+batch_size = 32
 
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
@@ -68,9 +68,9 @@ class FlowerNN(nn.Module):
 		self.dropout3 = nn.Dropout(p=0.4)
 		# self.dropout4 = nn.Dropout(p=0.4)
 		# self.bn = nn.BatchNorm2d(16)
-		self.fc1 = nn.Linear(in_features=64 * 27 * 27, out_features=256)
-		self.fc2 = nn.Linear(256, 128)
-		self.fc3 = nn.Linear(128, 102)
+		self.fc1 = nn.Linear(in_features=64 * 27 * 27, out_features=512)
+		self.fc2 = nn.Linear(512, 256)
+		self.fc3 = nn.Linear(256, 128)
 
 		self.activation_fn = activation_fn
 
@@ -79,6 +79,8 @@ class FlowerNN(nn.Module):
 		x = self.dropout2(self.pool2(self.activation_fn(self.conv2(x))))
 		# x = self.dropout3(self.pool1(self.activation_fn(self.conv3(x))))
 		x = torch.flatten(x, 1)
+		# x = self.activation_fn(self.fc1(x))
+		# x = self.activation_fn(self.fc2(x))
 		x = self.activation_fn(self.fc1(x))
 		x = self.dropout3(x)
 		x = self.activation_fn(self.fc2(x))
