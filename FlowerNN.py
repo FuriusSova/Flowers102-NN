@@ -31,7 +31,7 @@ val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
 conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=5, stride=1, padding=2)
-conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=2, padding=2)
+conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1)
 conv3 = nn.Conv2d(in_channels=128, out_channels=512, kernel_size=3, stride=2)
 # conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
 pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
