@@ -32,7 +32,7 @@ test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
 conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=5, stride=1, padding=2)
 conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=2, padding=2)
-conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=5, stride=2, padding=2)
 conv4 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1)
 pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 pool2 = nn.MaxPool2d(kernel_size=4, stride=4)
@@ -67,7 +67,7 @@ class FlowerNN(nn.Module):
 		self.bn1 = nn.BatchNorm2d(128)
 		self.bn2 = nn.BatchNorm2d(256)
 		self.bn3 = nn.BatchNorm2d(512)
-		self.fc1 = nn.Linear(in_features=512 * 7 * 7, out_features=1024)
+		self.fc1 = nn.Linear(in_features=512 * 3 * 3, out_features=1024)
 		self.fc2 = nn.Linear(1024, 512)
 		self.fc3 = nn.Linear(512, 102)
 
