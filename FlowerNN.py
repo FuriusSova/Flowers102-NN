@@ -123,9 +123,9 @@ for i in range(epochs):
 	val_loss = val_results["val_loss"]
 	val_acc = val_results["val_acc"]
 
-	if val_loss < best_val_loss:
-		best_val_loss = val_loss
-		torch.save(classifier.state_dict(), "./trained_model.pt")
+	# if val_loss < best_val_loss:
+	# 	best_val_loss = val_loss
+	# 	torch.save(classifier.state_dict(), "./trained_model.pt")
 
 	train_losses.append(total_loss_train / total_samples_train)
 	train_accuracies.append(total_correct_train / total_samples_train)
